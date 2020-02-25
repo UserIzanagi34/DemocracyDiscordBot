@@ -19,7 +19,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         {
             EmbedBuilder embed = new EmbedBuilder().WithTitle("Bot Command Help").WithFooter("Powered by Democracy!");
             embed.AddField("**Available Informational Commands:**", "`!hello` for basic bot info, `!help` for usage info");
-            embed.AddField("**Available Voting Commands:**", "`!ballot` to see what's current available to vote for, `!vote [topic] <choices ...>` to choose your votes, `!clearvote` to cancel your previous vote.");
+            embed.AddField("**Available Voting Commands:**", "`!ballot` to see what's current available to vote for, `!vote [topic] <choices ...>` to choose your votes, `!clearvote [topic]` to cancel your previous vote.");
             embed.AddField("**How To Vote:**", "1: Pull open the `!ballot`\n2: Pick the topic you'd like to cast your vote on (let's say for example, 'Topic A: Who's the new king?')"
                 + "\n3: Pick what choices you like (let's say you like '1: Bob' and will accept '3: Joe', but don't want '2: Steve.'.\n4: Enter your choices to the `!vote` command "
                 + "(for those examples, you would type `!vote A 1 3`. This would cast your vote for Topic A as preferring Bob most, and Joe as secondary, but not supporting Steve at all)."

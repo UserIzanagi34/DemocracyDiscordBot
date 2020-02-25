@@ -6,6 +6,7 @@ using DiscordBotBase.CommandHandlers;
 using Discord;
 using Discord.WebSocket;
 using FreneticUtilities.FreneticDataSyntax;
+using FreneticUtilities.FreneticExtensions;
 
 namespace DemocracyDiscordBot.CommandHandlers
 {
@@ -45,9 +46,51 @@ namespace DemocracyDiscordBot.CommandHandlers
                 {
                     embed.AddField($"Option **{choice}**:", choicesSection.GetString(choice));
                 }
+                List<string> choices = topicSection.GetStringList($"user_results.{message.Author.Id}");
+                if (choices != null)
+                {
+                    embed.AddField("You've already voted for:", $"`{string.Join(", ", choices)}`");
+                }
                 SendReply(message, embed.Build());
             }
-            // TODO
+        }
+
+        /// <summary>
+        /// Gets the topic section for a voting command. Also performs other basic prechecks.
+        /// </summary>
+        public FDSSection GetVoteTopicSection(string[] cmds, SocketMessage message, out string topic)
+        {
+            topic = null;
+            if (!IsUserAllowed(message))
+            {
+                return null;
+            }
+            if (DemocracyBot.VoteTopicsSection.IsEmpty())
+            {
+                SendGenericNegativeMessageReply(message, "No Current Voting", "Nothing to vote on. Check back later!");
+                return null;
+            }
+            if (DemocracyBot.VoteTopicsSection.Data.Count == 1)
+            {
+                topic = DemocracyBot.VoteTopicsSection.Data.Keys.First();
+            }
+            if (cmds.Length > 0)
+            {
+                topic = cmds[0];
+            }
+            if (topic == null)
+            {
+                SendGenericNegativeMessageReply(message, "Must Specify Topic", "There are currently multiple topics being voted on. Please specify which. Use `!ballot` to see the list of current topics!");
+                return null;
+            }
+            FDSSection topicSection = DemocracyBot.VoteTopicsSection.GetSectionLowered(topic);
+            if (topicSection == null)
+            {
+                SendGenericNegativeMessageReply(message, "Invalid Topic, Or Must Specify", "There are currently multiple topics being voted on. Please specify which. Use `!ballot` to see the list of current topics!"
+                    + "\n\nIf you did specify a topic, you likely typed it in wrong. Remember, just use the single-letter topic prefix, not the full name.");
+                return null;
+            }
+            return topicSection;
         }
 
         /// <summary>
@@ -55,11 +98,57 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// </summary>
         public void CMD_Vote(string[] cmds, SocketMessage message)
         {
-            if (!IsUserAllowed(message))
+            FDSSection topicSection = GetVoteTopicSection(cmds, message, out string topicName);
+            if (topicSection == null)
             {
                 return;
             }
-            // TODO
+            topicName = topicName.ToLowerFast();
+            FDSSection choicesSection = topicSection.GetSection("Choices");
+            List<string> newChoices = new List<string>();
+            for (int i = 0; i < cmds.Length; i++)
+            {
+                string arg = cmds[i].Replace(",", "").Replace("`", "").Trim().ToLowerFast();
+                if (arg == topicName && newChoices.IsEmpty())
+                {
+                    continue;
+                }
+                if (arg.ToLowerFast() == "none" && newChoices.IsEmpty())
+                {
+                    newChoices.Add("none");
+                    break;
+                }
+                if (string.IsNullOrWhiteSpace(arg))
+                {
+                    continue;
+                }
+                if (choicesSection.GetRootDataLowered(arg) == null)
+                {
+                    SendGenericNegativeMessageReply(message, "Invalid Choice", $"Choice `{arg}` is not recognized. Did you format the command correctly?");
+                    return;
+                }
+                if (newChoices.Contains(arg))
+                {
+                    SendGenericNegativeMessageReply(message, "Duplicate Choice", $"Choice `{arg}` has been sent twice. Check over your vote, you may have made a typo.");
+                    return;
+                }
+                newChoices.Add(arg);
+            }
+            if (newChoices.IsEmpty())
+            {
+                SendGenericNegativeMessageReply(message, "Need To Choose", "You issued a vote command without any choices. You need to choose! If you're confused how to vote, use `!help`.");
+                return;
+            }
+            List<string> originalChoices = topicSection.GetStringList($"user_results.{message.Author.Id}");
+            topicSection.Set($"user_results.{message.Author.Id}", newChoices);
+            if (originalChoices == null)
+            {
+                SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been cast as: `{string.Join(", ", newChoices)}`.");
+            }
+            else
+            {
+                SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been replaced to: `{string.Join(", ", newChoices)}`.\n\nFor your own reference, here is your original vote for that topic: `{string.Join(", ", originalChoices)}`.");
+            }
         }
 
         /// <summary>
@@ -67,11 +156,19 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// </summary>
         public void CMD_ClearVote(string[] cmds, SocketMessage message)
         {
-            if (!IsUserAllowed(message))
+            FDSSection topicSection = GetVoteTopicSection(cmds, message, out string topicName);
+            if (topicSection == null)
             {
                 return;
             }
-            // TODO
+            List<string> choices = topicSection.GetStringList($"user_results.{message.Author.Id}");
+            if (choices == null)
+            {
+                SendGenericNegativeMessageReply(message, "Nothing To Clear", "You already do not have any vote cast to that voting topic.");
+                return;
+            }
+            topicSection.Remove($"user_results.{message.Author.Id}");
+            SendGenericPositiveMessageReply(message, "Cleared", $"Your vote for topic `{topicName}` has been removed.\n\nFor your own reference, here is your original vote for that topic: `{string.Join(", ", choices)}`.");
         }
     }
 }

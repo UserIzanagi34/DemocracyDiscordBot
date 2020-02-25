@@ -57,17 +57,22 @@ namespace DemocracyDiscordBot
         /// </summary>
         static void Main(string[] args)
         {
-            InfoCommands infoCommands = new InfoCommands();
-            VotingCommands voteCommands = new VotingCommands();
-            CoreCommands coreCommands = new CoreCommands(IsAdmin);
-            AdminCommands adminCommands = new AdminCommands();
             DiscordBotBaseHelper.StartBotHandler(args, new DiscordBotConfig()
             {
                 CommandPrefix = "!",
                 Initialize = (bot) =>
                 {
+                    InfoCommands infoCommands = new InfoCommands() { Bot = bot };
+                    VotingCommands voteCommands = new VotingCommands() { Bot = bot };
+                    CoreCommands coreCommands = new CoreCommands(IsAdmin) { Bot = bot };
+                    AdminCommands adminCommands = new AdminCommands() { Bot = bot };
                     OwningGuildID = bot.ConfigFile.GetUlong("guild_id").Value;
                     VoteTopicsSection = bot.ConfigFile.GetSection("vote_topics");
+                    if (VoteTopicsSection == null)
+                    {
+                        VoteTopicsSection = new FDSSection();
+                        bot.ConfigFile.Set("vote_topics", VoteTopicsSection);
+                    }
                     Admins = new HashSet<ulong>(bot.ConfigFile.GetStringList("admins").Select(s => ulong.Parse(s)));
                     // Info
                     bot.RegisterCommand(infoCommands.CMD_Help, "help", "halp", "hlp", "hal", "hel", "h", "?", "use", "usage");
@@ -76,11 +81,15 @@ namespace DemocracyDiscordBot
                     bot.RegisterCommand(voteCommands.CMD_Ballot, "ballot", "b");
                     bot.RegisterCommand(voteCommands.CMD_Vote, "vote", "v");
                     bot.RegisterCommand(voteCommands.CMD_ClearVote, "clearvote", "voteclear", "cv");
-                    bot.RegisterCommand(voteCommands.CMD_ClearVote, "clearvote", "voteclear", "cv");
                     // Admin
                     bot.RegisterCommand(coreCommands.CMD_Restart, "restart");
                     bot.RegisterCommand(adminCommands.CMD_CallVote, "callvote");
                     bot.RegisterCommand(adminCommands.CMD_EndVote, "endvote");
+                    bot.Client.Ready += () =>
+                    {
+                        bot.Client.SetGameAsync("With the balance of power in this world.").Wait();
+                        return Task.CompletedTask;
+                    };
                 },
                 ShouldPayAttentionToMessage = (message) =>
                 {

@@ -74,7 +74,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 topic = DemocracyBot.VoteTopicsSection.Data.Keys.First();
             }
-            if (cmds.Length > 0)
+            else if (cmds.Length > 0)
             {
                 topic = cmds[0].Replace("`", "").Replace(",", "").Replace(":", "").Trim();
             }

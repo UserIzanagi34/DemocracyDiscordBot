@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using DiscordBotBase;
 using DiscordBotBase.CommandHandlers;
 using Discord;
@@ -8,6 +9,7 @@ using Discord.WebSocket;
 using Discord.Rest;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticDataSyntax;
+using FreneticUtilities.FreneticToolkit;
 
 namespace DemocracyDiscordBot.CommandHandlers
 {
@@ -93,13 +95,13 @@ namespace DemocracyDiscordBot.CommandHandlers
             newTopicSection.SetRoot("user_results", new FDSSection());
             DemocracyBot.VoteTopicsSection.SetRoot(topicId, newTopicSection);
             DemocracyBot.Save();
-            RefreshTopicData(topicId, newTopicSection);
+            RefreshTopicData(topicId, newTopicSection, false);
         }
 
         /// <summary>
         /// Refreshes the topic data in the publicly visible counting post.
         /// </summary>
-        public static void RefreshTopicData(string topicId, FDSSection topicSection)
+        public static void RefreshTopicData(string topicId, FDSSection topicSection, bool isClosed)
         {
             try
             {
@@ -113,7 +115,8 @@ namespace DemocracyDiscordBot.CommandHandlers
                 {
                     choicesText.Append($"**{choice}**: `{choicesSection.GetString(choice)}`\n");
                 }
-                Embed embed = GetGenericPositiveMessageEmbed($"Vote For Topic **{topicId}**: {topicTitle}", $"Choices:\n{choicesText}\nVotes cast thus far: {topicSection.GetSection("user_results").Data.Count}\n\nDM this bot `!help` to cast your vote!");
+                Embed embed = GetGenericPositiveMessageEmbed($"Vote For Topic **{topicId}**: {topicTitle}", $"Choices:\n{choicesText}\nVotes cast thus far: {topicSection.GetSection("user_results").Data.Count}\n\n"
+                    + (isClosed ? "This vote is closed. Find the results below." : "DM this bot `!help` to cast your vote!"));
                 IMessage message = (DiscordBotBaseHelper.CurrentBot.Client.GetChannel(channelId) as SocketTextChannel).GetMessageAsync(postId).Result;
                 (message as RestUserMessage).ModifyAsync(m => m.Embed = embed).Wait();
             }
@@ -132,7 +135,106 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 return;
             }
-            // TODO
+            FDSSection topicSection = VotingCommands.GetVoteTopicSection(cmds, message, out string topicName);
+            if (topicSection == null)
+            {
+                return;
+            }
+            FDSSection choicesSection = topicSection.GetSection("Choices");
+            Bot.ConfigFile.GetSection("old_topics").SetRoot(StringConversionHelper.DateTimeToString(DateTimeOffset.UtcNow, true).Replace(".", "_") + "_topic_" + topicName, topicSection);
+            string realKey = DemocracyBot.VoteTopicsSection.Data.Keys.First(s => s.ToLowerFast() == topicName);
+            DemocracyBot.VoteTopicsSection.Remove(realKey);
+            RefreshTopicData(topicName, topicSection, true);
+            if (topicSection.GetRootKeys().IsEmpty())
+            {
+                SendGenericNegativeMessageReply(message, $"Vote For Topic {topicName} Failed", "No votes were cast.");
+            }
+            List<List<string>> voteSets = new List<List<string>>(50);
+            FDSSection userResultsSection = topicSection.GetSection("user_results");
+            foreach (string userId in userResultsSection.GetRootKeys())
+            {
+                List<string> choices = userResultsSection.GetStringList(userId);
+                if (choices != null && !choices.IsEmpty())
+                {
+                    voteSets.Add(choices);
+                }
+            }
+            int usersWhoVotedTotal = voteSets.Count;
+            Dictionary<string, int> votesTracker = new Dictionary<string, int>(128);
+            string winner = voteSets[0][0];
+            while (true)
+            {
+                votesTracker.Clear();
+                foreach (List<string> voteSet in voteSets)
+                {
+                    string vote = voteSet[0];
+                    if (!votesTracker.TryGetValue(vote, out int count))
+                    {
+                        count = 0;
+                    }
+                    votesTracker[vote] = count + 1;
+                }
+                if (votesTracker.Count == 0)
+                {
+                    Console.WriteLine("Something went funky in vote counting... tracker is empty without a clear winner!");
+                    break;
+                }
+                string best = voteSets[0][0], worst = voteSets[0][0];
+                int bestCount = 0, worstCount = int.MaxValue;
+                foreach (KeyValuePair<string, int> voteResult in votesTracker)
+                {
+                    if (voteResult.Value > bestCount)
+                    {
+                        best = voteResult.Key;
+                        bestCount = voteResult.Value;
+                    }
+                    if (voteResult.Value < worstCount)
+                    {
+                        worst = voteResult.Key;
+                        worstCount = voteResult.Value;
+                    }
+                }
+                if (bestCount * 2 > voteSets.Count)
+                {
+                    winner = best;
+                    break;
+                }
+                for (int i = 0; i < voteSets.Count; i++)
+                {
+                    if (voteSets[i][0] == worst)
+                    {
+                        voteSets[i].RemoveAt(0);
+                        if (voteSets[i].IsEmpty())
+                        {
+                            voteSets.RemoveAt(i--);
+                        }
+                    }
+                }
+            }
+            int numberHadFirst = 0;
+            int positionTotal = 0;
+            int numberHadAtAll = 0;
+            foreach (string userId in userResultsSection.GetRootKeys())
+            {
+                List<string> choices = userResultsSection.GetStringList(userId);
+                if (choices != null && !choices.IsEmpty())
+                {
+                    int index = choices.IndexOf(winner);
+                    if (index != -1)
+                    {
+                        numberHadAtAll++;
+                        positionTotal += index;
+                        if (index == 0)
+                        {
+                            numberHadFirst++;
+                        }
+                    }
+                }
+            }
+            SendGenericPositiveMessageReply(message, "Vote Results", $"**__Winner__**: **{winner}**: `{choicesSection.GetString(winner)}`\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n"
+                + $"Users whose votes were discarded due to preferring unpopular options: {usersWhoVotedTotal - voteSets.Count}\nUsers who listed the winner first: {numberHadFirst}\n"
+                + $"Users who listed the winner at all: {numberHadAtAll}\nAverage ranking of the winner: {positionTotal / numberHadAtAll}");
+            DemocracyBot.Save();
         }
     }
 }

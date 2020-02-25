@@ -18,7 +18,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// Checks whether a user is allowed to interact with the bot.
         /// </summary>
-        public bool IsUserAllowed(SocketMessage message)
+        public static bool IsUserAllowed(SocketMessage message)
         {
             return message.Author.MutualGuilds.Any(guild => guild.Id == DemocracyBot.OwningGuildID);
         }
@@ -58,7 +58,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// Gets the topic section for a voting command. Also performs other basic prechecks.
         /// </summary>
-        public FDSSection GetVoteTopicSection(string[] cmds, SocketMessage message, out string topic)
+        public static FDSSection GetVoteTopicSection(string[] cmds, SocketMessage message, out string topic)
         {
             topic = null;
             if (!IsUserAllowed(message))
@@ -76,7 +76,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             }
             if (cmds.Length > 0)
             {
-                topic = cmds[0];
+                topic = cmds[0].Replace("`", "").Replace(",", "").Replace(":", "").Trim();
             }
             if (topic == null)
             {
@@ -87,7 +87,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             if (topicSection == null)
             {
                 SendErrorMessageReply(message, "Invalid Topic, Or Must Specify", "There are currently multiple topics being voted on. Please specify which. Use `!ballot` to see the list of current topics!"
-                    + "\n\nIf you did specify a topic, you likely typed it in wrong. Remember, just use the single-letter topic prefix, not the full name.");
+                    + "\n\nIf you did specify a topic, you likely typed it in wrong. Remember, just use the short topic prefix, not the full name.");
                 return null;
             }
             return topicSection;
@@ -150,7 +150,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been replaced to: `{string.Join(", ", newChoices)}`.\n\nFor your own reference, here is your original vote for that topic: `{string.Join(", ", originalChoices)}`.");
             }
-            AdminCommands.RefreshTopicData(topicName, topicSection);
+            AdminCommands.RefreshTopicData(topicName, topicSection, false);
         }
 
         /// <summary>

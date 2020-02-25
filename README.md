@@ -25,8 +25,9 @@ guild_id: 341234567893012345
 # Admin user IDs to trust with admin commands. Sample ID is my own.
 admins:
 - 105458332365504512
-# Leave blank for now... this will be filled by topics later.
+# Leave blank for now... these will be filled automatically by the bot later.
 vote_topics:
+old_topics:
 ```
 
 #### To start the bot up:

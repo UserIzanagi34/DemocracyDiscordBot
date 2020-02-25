@@ -5,6 +5,7 @@ using System.Text;
 using DiscordBotBase.CommandHandlers;
 using Discord;
 using Discord.WebSocket;
+using FreneticUtilities.FreneticDataSyntax;
 
 namespace DemocracyDiscordBot.CommandHandlers
 {
@@ -18,7 +19,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// </summary>
         public bool IsUserAllowed(SocketMessage message)
         {
-            return message.Author.MutualGuilds.Any(guild => guild.Id == Program.OwningGuildID);
+            return message.Author.MutualGuilds.Any(guild => guild.Id == DemocracyBot.OwningGuildID);
         }
 
         /// <summary>
@@ -30,6 +31,22 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 return;
             }
+            if (DemocracyBot.VoteTopicsSection.IsEmpty())
+            {
+                SendGenericNegativeMessageReply(message, "No Current Voting", "Nothing to vote on. Check back later!");
+                return;
+            }
+            foreach (string topic in DemocracyBot.VoteTopicsSection.GetRootKeys())
+            {
+                FDSSection topicSection = DemocracyBot.VoteTopicsSection.GetSection(topic);
+                EmbedBuilder embed = new EmbedBuilder().WithTitle($"Topic **{topic}**: {topicSection.GetString("Topic")}");
+                FDSSection choicesSection = topicSection.GetSection("Choices");
+                foreach (string choice in choicesSection.GetRootKeys())
+                {
+                    embed.AddField($"Option **{choice}**:", choicesSection.GetString(choice));
+                }
+                SendReply(message, embed.Build());
+            }
             // TODO
         }
 
@@ -37,6 +54,18 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// User command to cast a vote.
         /// </summary>
         public void CMD_Vote(string[] cmds, SocketMessage message)
+        {
+            if (!IsUserAllowed(message))
+            {
+                return;
+            }
+            // TODO
+        }
+
+        /// <summary>
+        /// User command to clear their vote.
+        /// </summary>
+        public void CMD_ClearVote(string[] cmds, SocketMessage message)
         {
             if (!IsUserAllowed(message))
             {

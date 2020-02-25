@@ -14,6 +14,7 @@ using System.Diagnostics;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticDataSyntax;
 using DiscordBotBase;
+using DiscordBotBase.CommandHandlers;
 using DemocracyDiscordBot.CommandHandlers;
 
 namespace DemocracyDiscordBot
@@ -33,6 +34,8 @@ namespace DemocracyDiscordBot
         /// </summary>
         public static FDSSection VoteTopicsSection;
 
+        public static HashSet<ulong> Admins;
+
         /// <summary>
         /// Save the config, after any votes are cast.
         /// </summary>
@@ -42,12 +45,22 @@ namespace DemocracyDiscordBot
         }
 
         /// <summary>
+        /// Helper method to determine if a user is a bot admin.
+        /// </summary>
+        public static bool IsAdmin(SocketUser user)
+        {
+            return Admins.Contains(user.Id);
+        }
+
+        /// <summary>
         /// Software entry point - starts the bot.
         /// </summary>
         static void Main(string[] args)
         {
             InfoCommands infoCommands = new InfoCommands();
             VotingCommands voteCommands = new VotingCommands();
+            CoreCommands coreCommands = new CoreCommands(IsAdmin);
+            AdminCommands adminCommands = new AdminCommands();
             DiscordBotBaseHelper.StartBotHandler(args, new DiscordBotConfig()
             {
                 CommandPrefix = "!",
@@ -55,11 +68,19 @@ namespace DemocracyDiscordBot
                 {
                     OwningGuildID = bot.ConfigFile.GetUlong("guild_id").Value;
                     VoteTopicsSection = bot.ConfigFile.GetSection("vote_topics");
+                    Admins = new HashSet<ulong>(bot.ConfigFile.GetStringList("admins").Select(s => ulong.Parse(s)));
+                    // Info
                     bot.RegisterCommand(infoCommands.CMD_Help, "help", "halp", "hlp", "hal", "hel", "h", "?", "use", "usage");
                     bot.RegisterCommand(infoCommands.CMD_Hello, "hello", "hi", "whoareyou", "what", "link", "info");
+                    // Voting
                     bot.RegisterCommand(voteCommands.CMD_Ballot, "ballot", "b");
                     bot.RegisterCommand(voteCommands.CMD_Vote, "vote", "v");
                     bot.RegisterCommand(voteCommands.CMD_ClearVote, "clearvote", "voteclear", "cv");
+                    bot.RegisterCommand(voteCommands.CMD_ClearVote, "clearvote", "voteclear", "cv");
+                    // Admin
+                    bot.RegisterCommand(coreCommands.CMD_Restart, "restart");
+                    bot.RegisterCommand(adminCommands.CMD_CallVote, "callvote");
+                    bot.RegisterCommand(adminCommands.CMD_EndVote, "endvote");
                 },
                 ShouldPayAttentionToChannel = (channel) =>
                 {

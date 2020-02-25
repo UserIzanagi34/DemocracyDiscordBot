@@ -141,6 +141,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             }
             List<string> originalChoices = topicSection.GetStringList($"user_results.{message.Author.Id}");
             topicSection.Set($"user_results.{message.Author.Id}", newChoices);
+            DemocracyBot.Save();
             if (originalChoices == null)
             {
                 SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been cast as: `{string.Join(", ", newChoices)}`.");
@@ -168,6 +169,7 @@ namespace DemocracyDiscordBot.CommandHandlers
                 return;
             }
             topicSection.Remove($"user_results.{message.Author.Id}");
+            DemocracyBot.Save();
             SendGenericPositiveMessageReply(message, "Cleared", $"Your vote for topic `{topicName}` has been removed.\n\nFor your own reference, here is your original vote for that topic: `{string.Join(", ", choices)}`.");
         }
     }

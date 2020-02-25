@@ -5,18 +5,34 @@ A Discord bot that implements a private ranked-choice voting system for Discord 
 
 ## Setup
 
-Gathering the files note:
+#### Gathering the files note:
 - In addition to a `git clone` of this repository, you need to clone the sub-repository, using a command like `git submodule update --init --recursive`.
 
+#### Start Script
 The `start.sh` file is used by the `restart` command and should be maintained as correct to the environment to launch a new bot program instance... points of note:
 - It starts with a `git pull` command to self-update. If this is not wanted, remove it. Be careful what repository this will pull from (a fork you own vs. the original repository vs. some other one...)
 - It uses a `screen` command to launch the bot quietly into a background screen. The `screen` program must be installed for that to work. Alternately, replace it with some other equivalent background terminal program.
 - The restart command will run this script equivalently to the following terminal command: `bash ./start.sh 12345` where `12345` is the ID number for the channel that issued a restart command.
 
-To start the bot up:
+#### Configuration:
+- You need a `config` directory, within the program's run directory
+    - Within that directory, you need `token.txt` containing the bot token to use
+    - You also need `config.fds`, a FreneticDataSyntax file containing configuration detail, per the format below:
+
+```yml
+# Guild to use. Sample ID is fake.
+guild_id: 341234567893012345
+# Admin user IDs to trust with admin commands. Sample ID is my own.
+admins:
+- 105458332365504512
+# Leave blank for now... this will be filled by topics later.
+vote_topics:
+```
+
+#### To start the bot up:
 - Run `./start.sh` while in the bot's directory.
 
-To view the bot's terminal:
+#### To view the bot's terminal:
 - Connect to the screen - with an unaltered `start.sh` file, the way to connect to that is by running `screen -r DemocracyDiscordBot`.
 
 ## Copyright/Legal Info

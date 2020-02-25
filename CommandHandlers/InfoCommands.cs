@@ -5,7 +5,7 @@ using DiscordBotBase.CommandHandlers;
 using Discord;
 using Discord.WebSocket;
 
-namespace DemocracyDiscordBot
+namespace DemocracyDiscordBot.CommandHandlers
 {
     /// <summary>
     /// Informational user commands handler.

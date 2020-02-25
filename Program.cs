@@ -14,6 +14,7 @@ using System.Diagnostics;
 using FreneticUtilities.FreneticExtensions;
 using FreneticUtilities.FreneticDataSyntax;
 using DiscordBotBase;
+using DemocracyDiscordBot.CommandHandlers;
 
 namespace DemocracyDiscordBot
 {
@@ -36,6 +37,7 @@ namespace DemocracyDiscordBot
             VotingCommands voteCommands = new VotingCommands();
             DiscordBotBaseHelper.StartBotHandler(args, new DiscordBotConfig()
             {
+                CommandPrefix = "!",
                 Initialize = (bot) =>
                 {
                     OwningGuildID = bot.ConfigFile.GetUlong("guild_id").Value;

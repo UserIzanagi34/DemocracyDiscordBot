@@ -1,0 +1,3 @@
+[submodule "mcmonkeyDiscordBotBase"]
+	path = mcmonkeyDiscordBotBase
+	url = https://github.com/mcmonkeyprojects/mcmonkeyDiscordBotBase

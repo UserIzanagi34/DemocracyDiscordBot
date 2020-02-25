@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>DemocracyDiscordBot</RootNamespace>
+    <AssemblyName>DemocracyDiscordBot</AssemblyName>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <Product>DemocracyDiscordBot</Product>
+    <PackageId>DemocracyDiscordBot</PackageId>
+    <Copyright>Copyright (C) 2020 Alex "mcmonkey" Goodwin</Copyright>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="**\*.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="2.1.1" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.1.1" />
+    <PackageReference Include="YamlDotNet" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="mcmonkeyDiscordBotBase\*.*" />
+    <Compile Remove="mcmonkeyDiscordBotBase\**\*.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="mcmonkeyDiscordBotBase\mcmonkeyDiscordBotBase.csproj" />
+    <ProjectReference Include="mcmonkeyDiscordBotBase\FreneticUtilities\FreneticUtilities\FreneticUtilities.csproj" />
+  </ItemGroup>
+</Project>

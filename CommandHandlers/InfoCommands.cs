@@ -25,6 +25,11 @@ namespace DemocracyDiscordBot.CommandHandlers
                 + "(for those examples, you would type `!vote A 1 3`. This would cast your vote for Topic A as preferring Bob most, and Joe as secondary, but not supporting Steve at all)."
                 + "\nNote that you can input 'none' as your choices input to indicate you don't have any preference but want the total number of members who voted to be 1 higher.");
             SendReply(message, embed.Build());
+            if (DemocracyBot.IsAdmin(message.Author))
+            {
+                SendGenericPositiveMessageReply(message, "Admin Command Help", "`!callvote <topic ID> <topic text> | <choice> | (... additional choices)`, like `!callvote A Who's the new king? | Bob | Steve | Joe` to call a new vote, "
+                        + " `!endvote <topic ID>` to end a vote, `!restart` to restart the bot.");
+            }
         }
 
         /// <summary>

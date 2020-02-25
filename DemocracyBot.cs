@@ -82,9 +82,9 @@ namespace DemocracyDiscordBot
                     bot.RegisterCommand(adminCommands.CMD_CallVote, "callvote");
                     bot.RegisterCommand(adminCommands.CMD_EndVote, "endvote");
                 },
-                ShouldPayAttentionToChannel = (channel) =>
+                ShouldPayAttentionToMessage = (message) =>
                 {
-                    return channel is ISocketPrivateChannel;
+                    return message.Channel is ISocketPrivateChannel || IsAdmin(message.Author);
                 }
             });
         }

@@ -80,13 +80,13 @@ namespace DemocracyDiscordBot.CommandHandlers
             }
             if (topic == null)
             {
-                SendGenericNegativeMessageReply(message, "Must Specify Topic", "There are currently multiple topics being voted on. Please specify which. Use `!ballot` to see the list of current topics!");
+                SendErrorMessageReply(message, "Must Specify Topic", "There are currently multiple topics being voted on. Please specify which. Use `!ballot` to see the list of current topics!");
                 return null;
             }
             FDSSection topicSection = DemocracyBot.VoteTopicsSection.GetSectionLowered(topic);
             if (topicSection == null)
             {
-                SendGenericNegativeMessageReply(message, "Invalid Topic, Or Must Specify", "There are currently multiple topics being voted on. Please specify which. Use `!ballot` to see the list of current topics!"
+                SendErrorMessageReply(message, "Invalid Topic, Or Must Specify", "There are currently multiple topics being voted on. Please specify which. Use `!ballot` to see the list of current topics!"
                     + "\n\nIf you did specify a topic, you likely typed it in wrong. Remember, just use the single-letter topic prefix, not the full name.");
                 return null;
             }
@@ -124,19 +124,19 @@ namespace DemocracyDiscordBot.CommandHandlers
                 }
                 if (choicesSection.GetRootDataLowered(arg) == null)
                 {
-                    SendGenericNegativeMessageReply(message, "Invalid Choice", $"Choice `{arg}` is not recognized. Did you format the command correctly?");
+                    SendErrorMessageReply(message, "Invalid Choice", $"Choice `{arg}` is not recognized. Did you format the command correctly?");
                     return;
                 }
                 if (newChoices.Contains(arg))
                 {
-                    SendGenericNegativeMessageReply(message, "Duplicate Choice", $"Choice `{arg}` has been sent twice. Check over your vote, you may have made a typo.");
+                    SendErrorMessageReply(message, "Duplicate Choice", $"Choice `{arg}` has been sent twice. Check over your vote, you may have made a typo.");
                     return;
                 }
                 newChoices.Add(arg);
             }
             if (newChoices.IsEmpty())
             {
-                SendGenericNegativeMessageReply(message, "Need To Choose", "You issued a vote command without any choices. You need to choose! If you're confused how to vote, use `!help`.");
+                SendErrorMessageReply(message, "Need To Choose", "You issued a vote command without any choices. You need to choose! If you're confused how to vote, use `!help`.");
                 return;
             }
             List<string> originalChoices = topicSection.GetStringList($"user_results.{message.Author.Id}");
@@ -150,6 +150,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been replaced to: `{string.Join(", ", newChoices)}`.\n\nFor your own reference, here is your original vote for that topic: `{string.Join(", ", originalChoices)}`.");
             }
+            AdminCommands.RefreshTopicData(topicName, topicSection);
         }
 
         /// <summary>

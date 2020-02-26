@@ -27,6 +27,11 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 return;
             }
+            if (message.Channel is ISocketPrivateChannel)
+            {
+                SendErrorMessageReply(message, "Wrong Location", "Votes cannot be called from a private message.");
+                return;
+            }
             if (cmds.Length < 4)
             {
                 SendErrorMessageReply(message, "Invalid Input", "Input does not look like it can possibly be valid. Use `!help` for usage information.");

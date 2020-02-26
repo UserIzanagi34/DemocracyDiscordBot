@@ -93,7 +93,7 @@ namespace DemocracyDiscordBot
                 },
                 ShouldPayAttentionToMessage = (message) =>
                 {
-                    return message.Channel is ISocketPrivateChannel || IsAdmin(message.Author);
+                    return message.Channel is IPrivateChannel || IsAdmin(message.Author);
                 }
             });
         }

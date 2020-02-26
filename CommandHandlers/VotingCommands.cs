@@ -142,13 +142,19 @@ namespace DemocracyDiscordBot.CommandHandlers
             List<string> originalChoices = topicSection.GetStringList($"user_results.{message.Author.Id}");
             topicSection.Set($"user_results.{message.Author.Id}", newChoices);
             DemocracyBot.Save();
+            StringBuilder choicesText = new StringBuilder(100);
+            foreach (string choice in newChoices)
+            {
+                choicesText.Append($"**{choice}**: `{choicesSection.GetString(choice)}`, ");
+            }
+            choicesText.Length -= 2;
             if (originalChoices == null)
             {
-                SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been cast as: `{string.Join(", ", newChoices)}`.");
+                SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been cast as: {choicesText}.");
             }
             else
             {
-                SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been replaced to: `{string.Join(", ", newChoices)}`.\n\nFor your own reference, here is your original vote for that topic: `{string.Join(", ", originalChoices)}`.");
+                SendGenericPositiveMessageReply(message, "Vote Cast", $"Your vote for topic `{topicName}` has been replaced to: {choicesText}.\n\nFor your own reference, here is your original vote for that topic: `{string.Join(", ", originalChoices)}`.");
             }
             AdminCommands.RefreshTopicData(topicName, topicSection, false);
         }

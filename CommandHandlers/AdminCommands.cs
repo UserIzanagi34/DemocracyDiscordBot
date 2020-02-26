@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Threading.Tasks;
 using DiscordBotBase;
 using DiscordBotBase.CommandHandlers;
 using Discord;
@@ -27,7 +28,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 return;
             }
-            if (message.Channel is ISocketPrivateChannel)
+            if (message.Channel is IPrivateChannel)
             {
                 SendErrorMessageReply(message, "Wrong Location", "Votes cannot be called from a private message.");
                 return;
@@ -93,7 +94,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             {
                 choiceSection.Set((i + 1).ToString(), choices[i]);
             }
-            RestUserMessage sentMessage = message.Channel.SendMessageAsync(embed: GetGenericPositiveMessageEmbed("Vote In Progress", "New Vote... Data inbound, please wait!")).Result;
+            IUserMessage sentMessage = message.Channel.SendMessageAsync(embed: GetGenericPositiveMessageEmbed("Vote In Progress", "New Vote... Data inbound, please wait!")).Result;
             newTopicSection.SetRoot("channel_id", sentMessage.Channel.Id);
             newTopicSection.SetRoot("post_id", sentMessage.Id);
             newTopicSection.SetRoot("Choices", choiceSection);
@@ -122,8 +123,8 @@ namespace DemocracyDiscordBot.CommandHandlers
                 }
                 Embed embed = GetGenericPositiveMessageEmbed($"Vote For Topic **{topicId}**: {topicTitle}", $"Choices:\n{choicesText}\nVotes cast thus far: {topicSection.GetSection("user_results").Data.Count}\n\n"
                     + (isClosed ? "This vote is closed. Find the results below." : "DM this bot `!help` to cast your vote!"));
-                IMessage message = (DiscordBotBaseHelper.CurrentBot.Client.GetChannel(channelId) as SocketTextChannel).GetMessageAsync(postId).Result;
-                (message as RestUserMessage).ModifyAsync(m => m.Embed = embed).Wait();
+                IMessage message = (DiscordBotBaseHelper.CurrentBot.Client.GetChannel(channelId) as ITextChannel).GetMessageAsync(postId).Result;
+                (message as IUserMessage).ModifyAsync(m => m.Embed = embed).Wait();
             }
             catch (Exception ex)
             {

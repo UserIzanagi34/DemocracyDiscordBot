@@ -178,6 +178,37 @@ namespace DemocracyDiscordBot.CommandHandlers
             int usersWhoVotedTotal = voteSets.Count;
             Dictionary<string, int> votesTracker = new Dictionary<string, int>(128);
             string winner = voteSets[0][0];
+            string secondPlace = voteSets[0][0];
+            int discards = 0;
+            bool haveWinner = false;
+            string winnerStats = "(error: stats missing)";
+            string secondPlaceStats = "(error: second place missing)";
+            string gatherStats(string choice, string type)
+            {
+                int numberHadFirst = 0;
+                int positionTotal = 0;
+                int numberHadAtAll = 0;
+                foreach (string userId in userResultsSection.GetRootKeys())
+                {
+                    List<string> choices = userResultsSection.GetStringList(userId);
+                    if (choices != null && !choices.IsEmpty())
+                    {
+                        int index = choices.IndexOf(choice);
+                        if (index != -1)
+                        {
+                            numberHadAtAll++;
+                            positionTotal += index + 1;
+                            if (index == 0)
+                            {
+                                numberHadFirst++;
+                            }
+                        }
+                    }
+                }
+                return $"Options that were discarded due to low support: {discards}\n"
+                + $"Users whose votes were discarded due to supporting only unpopular options: {usersWhoVotedTotal - voteSets.Count}\nUsers who listed the {type} first: {numberHadFirst}\n"
+                + $"Users who listed the {type} at all: {numberHadAtAll}\nAverage ranking of the {type}: {(positionTotal / (float)numberHadAtAll).ToString("0.0")}";
+            }
             while (true)
             {
                 votesTracker.Clear();
@@ -212,8 +243,30 @@ namespace DemocracyDiscordBot.CommandHandlers
                 }
                 if (bestCount * 2 > voteSets.Count)
                 {
-                    winner = best;
-                    break;
+                    if (!haveWinner)
+                    {
+                        winner = best;
+                        winnerStats = gatherStats(winner, "winner");
+                        haveWinner = true;
+                        for (int i = 0; i < voteSets.Count; i++)
+                        {
+                            if (voteSets[i].Contains(winner))
+                            {
+                                voteSets[i].Remove(winner);
+                                if (voteSets[i].IsEmpty())
+                                {
+                                    voteSets.RemoveAt(i--);
+                                }
+                            }
+                        }
+                        worst = winner;
+                    }
+                    else
+                    {
+                        secondPlace = best;
+                        secondPlaceStats = gatherStats(secondPlace, "runner up");
+                        break;
+                    }
                 }
                 for (int i = 0; i < voteSets.Count; i++)
                 {
@@ -226,30 +279,14 @@ namespace DemocracyDiscordBot.CommandHandlers
                         }
                     }
                 }
-            }
-            int numberHadFirst = 0;
-            int positionTotal = 0;
-            int numberHadAtAll = 0;
-            foreach (string userId in userResultsSection.GetRootKeys())
-            {
-                List<string> choices = userResultsSection.GetStringList(userId);
-                if (choices != null && !choices.IsEmpty())
+                if (!haveWinner)
                 {
-                    int index = choices.IndexOf(winner);
-                    if (index != -1)
-                    {
-                        numberHadAtAll++;
-                        positionTotal += index + 1;
-                        if (index == 0)
-                        {
-                            numberHadFirst++;
-                        }
-                    }
+                    discards++;
                 }
             }
-            SendGenericPositiveMessageReply(message, "Vote Results", $"**__Winner__**: **{winner}**: `{choicesSection.GetString(winner)}`\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n"
-                + $"Users whose votes were discarded due to preferring unpopular options: {usersWhoVotedTotal - voteSets.Count}\nUsers who listed the winner first: {numberHadFirst}\n"
-                + $"Users who listed the winner at all: {numberHadAtAll}\nAverage ranking of the winner: {(positionTotal / (float)numberHadAtAll).ToString("0.0")}");
+            SendGenericPositiveMessageReply(message, $"Vote Results For **{topicName}: {topicSection.GetString("Topic")}**", $"**__Winner__**: **{winner}**: `{choicesSection.GetString(winner)}`"
+                + $"\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n{winnerStats}\n\n"
+                + $"**__Runner Up__**: **{secondPlace}**: `{choicesSection.GetString(secondPlace)}`\n**Stats For Runner Up**:\n{secondPlaceStats}");
             DemocracyBot.Save();
         }
     }

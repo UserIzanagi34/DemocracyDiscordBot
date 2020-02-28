@@ -15,7 +15,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// User command to get help (shows a list of valid bot commands).
         /// </summary>
-        public void CMD_Help(string[] cmds, SocketMessage message)
+        public void CMD_Help(string[] cmds, IUserMessage message)
         {
             EmbedBuilder embed = new EmbedBuilder().WithTitle("Bot Command Help").WithFooter("Powered by Democracy!").WithColor(0, 255, 255);
             embed.AddField("**Available Informational Commands:**", "`!hello` for basic bot info, `!help` for usage info");
@@ -35,7 +35,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// User command to get basic bot info.
         /// </summary>
-        public void CMD_Hello(string[] cmds, SocketMessage message)
+        public void CMD_Hello(string[] cmds, IUserMessage message)
         {
             SendGenericPositiveMessageReply(message, "Discord Democracy Bot", "Hello! I'm the Discord Democracy bot, written by Alex \"mcmonkey\" Goodwin.\nI'm 100% Free And Open Source on GitHub at <https://github.com/mcmonkeyprojects/DemocracyDiscordBot>!");
         }

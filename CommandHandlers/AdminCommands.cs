@@ -22,7 +22,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// Admin command to start a new vote.
         /// </summary>
-        public void CMD_CallVote(string[] cmds, SocketMessage message)
+        public void CMD_CallVote(string[] cmds, IUserMessage message)
         {
             if (!DemocracyBot.IsAdmin(message.Author))
             {
@@ -135,7 +135,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// Admin command to end an existing vote.
         /// </summary>
-        public void CMD_EndVote(string[] cmds, SocketMessage message)
+        public void CMD_EndVote(string[] cmds, IUserMessage message)
         {
             if (!DemocracyBot.IsAdmin(message.Author))
             {

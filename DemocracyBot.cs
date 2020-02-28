@@ -47,7 +47,7 @@ namespace DemocracyDiscordBot
         /// <summary>
         /// Helper method to determine if a user is a bot admin.
         /// </summary>
-        public static bool IsAdmin(SocketUser user)
+        public static bool IsAdmin(IUser user)
         {
             return Admins.Contains(user.Id);
         }

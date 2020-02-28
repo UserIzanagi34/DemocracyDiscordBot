@@ -18,15 +18,15 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// Checks whether a user is allowed to interact with the bot.
         /// </summary>
-        public static bool IsUserAllowed(SocketMessage message)
+        public static bool IsUserAllowed(IUserMessage message)
         {
-            return message.Author.MutualGuilds.Any(guild => guild.Id == DemocracyBot.OwningGuildID);
+            return (message.Author as SocketUser).MutualGuilds.Any(guild => guild.Id == DemocracyBot.OwningGuildID);
         }
 
         /// <summary>
         /// User command to see the available voting topics.
         /// </summary>
-        public void CMD_Ballot(string[] cmds, SocketMessage message)
+        public void CMD_Ballot(string[] cmds, IUserMessage message)
         {
             if (!IsUserAllowed(message))
             {
@@ -58,7 +58,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// Gets the topic section for a voting command. Also performs other basic prechecks.
         /// </summary>
-        public static FDSSection GetVoteTopicSection(string[] cmds, SocketMessage message, out string topic)
+        public static FDSSection GetVoteTopicSection(string[] cmds, IUserMessage message, out string topic)
         {
             topic = null;
             if (!IsUserAllowed(message))
@@ -96,7 +96,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// User command to cast a vote.
         /// </summary>
-        public void CMD_Vote(string[] cmds, SocketMessage message)
+        public void CMD_Vote(string[] cmds, IUserMessage message)
         {
             FDSSection topicSection = GetVoteTopicSection(cmds, message, out string topicName);
             if (topicSection == null)
@@ -162,7 +162,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// User command to clear their vote.
         /// </summary>
-        public void CMD_ClearVote(string[] cmds, SocketMessage message)
+        public void CMD_ClearVote(string[] cmds, IUserMessage message)
         {
             FDSSection topicSection = GetVoteTopicSection(cmds, message, out string topicName);
             if (topicSection == null)

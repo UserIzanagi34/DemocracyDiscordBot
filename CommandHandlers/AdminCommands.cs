@@ -207,7 +207,7 @@ namespace DemocracyDiscordBot.CommandHandlers
                 }
                 return $"Options that were discarded due to low support: {discards}\n"
                 + $"Users whose votes were discarded due to supporting only unpopular options: {usersWhoVotedTotal - voteSets.Count}\nUsers who listed the {type} first: {numberHadFirst}\n"
-                + $"Users who listed the {type} at all: {numberHadAtAll}\nAverage ranking of the {type}: {(positionTotal / (float)numberHadAtAll).ToString("0.0")}";
+                + $"Users who listed the {type} at all: {numberHadAtAll}\nAverage ranking of the {type}: {positionTotal / (float)numberHadAtAll:0.0}";
             }
             while (true)
             {
